@@ -1,0 +1,6 @@
+Load f6, 3
+Load f2, 5
+Mul f0, f2, f4
+Sub f8, f2, f6
+Div f0, f0, f6
+Add f6, f8, f2
