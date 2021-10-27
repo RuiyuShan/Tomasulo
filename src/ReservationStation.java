@@ -40,11 +40,20 @@ public class ReservationStation {
     private ReservationStation qk;
 
     /**
+     * Source whose value should be stored into the register.
+     */
+    private Double qi;
+
+    /**
      * Used to hold information for the memory address calculation for a load or store.
      */
-    private Double A;
+    private String A;
 
-    public ReservationStation(Instruction instruction, boolean busy, Operation operation, Double vj, Double vk, ReservationStation qj, ReservationStation qk, Double a) {
+    public ReservationStation(){
+    }
+
+    public ReservationStation(String name, Instruction instruction, boolean busy, Operation operation, Double vj, Double vk, ReservationStation qj, ReservationStation qk, String a, Double qi) {
+        this.name = name;
         this.instruction = instruction;
         this.busy = busy;
         this.operation = operation;
@@ -52,6 +61,7 @@ public class ReservationStation {
         this.vk = vk;
         this.qj = qj;
         this.qk = qk;
+        this.qi = qi;
         A = a;
     }
 
@@ -119,17 +129,17 @@ public class ReservationStation {
         this.qk = qk;
     }
 
-    public Double getA() {
+    public String getA() {
         return A;
     }
 
-    public void setA(Double a) {
+    public void setA(String a) {
         A = a;
     }
 
     @Override
     public String toString() {
-        return "ReservationStation{" +
+        return "\nReservationStation{" +
                 "name='" + name + '\'' +
                 ", instruction=" + instruction +
                 ", busy=" + busy +
@@ -139,6 +149,6 @@ public class ReservationStation {
                 ", qj=" + qj +
                 ", qk=" + qk +
                 ", A=" + A +
-                '}';
+                "}";
     }
 }

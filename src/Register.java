@@ -51,9 +51,9 @@ public class Register {
 
     @Override
     public String toString() {
-        return "{" +
+        return "Register {" +
                 "name='" + name + '\'' +
                 ", value=" + value +
-                '}';
+                "}";
     }
 }

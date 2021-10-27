@@ -38,9 +38,9 @@ public class Instruction {
     private Phase phase;
 
     /**
-     * immediate value
+     * address of immediate value
      */
-    private Double immediate;
+    private String address;
 
     public Integer getPc() {
         return pc;
@@ -98,12 +98,12 @@ public class Instruction {
         this.clockCycle = clockCycle;
     }
 
-    public Double getImmediate() {
-        return immediate;
+    public String getAddress() {
+        return address;
     }
 
-    public void setImmediate(Double immediate) {
-        this.immediate = immediate;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public Instruction(Integer pc, Operation op, Integer clockCycle) {
@@ -112,13 +112,13 @@ public class Instruction {
         this.clockCycle = clockCycle;
     }
 
-    public Instruction(Integer pc, Operation op, Register rd, Integer clockCycle, Phase phase, Double immediate) {
+    public Instruction(Integer pc, Operation op, Register rs, Integer clockCycle, Phase phase, String address) {
         this.pc = pc;
         this.op = op;
-        this.rd = rd;
+        this.rs = rs;
         this.clockCycle = clockCycle;
         this.phase = phase;
-        this.immediate = immediate;
+        this.address = address;
     }
 
     public Instruction(Integer pc, Operation op, Register rd, Register rs, Register rt, Integer clockCycle, Phase phase) {
@@ -141,7 +141,7 @@ public class Instruction {
                 ", rt=" + rt +
                 ", clockCycle=" + clockCycle +
                 ", phase=" + phase +
-                ", immediate=" + immediate +
-                '}';
+                ", address=" + address +
+                "}";
     }
 }
