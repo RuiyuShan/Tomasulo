@@ -1,3 +1,5 @@
+package entity;
+
 public class Register {
     /**
      * id of register
@@ -51,7 +53,7 @@ public class Register {
 
     @Override
     public String toString() {
-        return "Register {" +
+        return "entity.Register {" +
                 "name='" + name + '\'' +
                 ", value=" + value +
                 "}";

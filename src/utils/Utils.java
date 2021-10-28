@@ -1,3 +1,5 @@
+package utils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -5,10 +7,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author shanruiyu <shanruiyu@kuaishou.com>
- * Created on 2021-10-27
- */
 public class Utils {
     /**
      * get index of a register.
@@ -28,9 +26,9 @@ public class Utils {
     }
 
     /**
-     * read the instruction text file
+     * read the entity.instruction text file
      *
-     * @return instruction string list
+     * @return entity.instruction string list
      */
     public static List<String> readInstructionsFromFile() {
         List<String> res = new ArrayList<>();
@@ -52,9 +50,9 @@ public class Utils {
     }
 
     /**
-     * remove the ',' for every part of an instruction string.
+     * remove the ',' for every part of an entity.instruction string.
      * @param instructionComponents
-     * @return removed instruction parts.
+     * @return removed entity.instruction parts.
      */
     public static String[] removeComma(String[] instructionComponents) {
         for (int i = 0; i < instructionComponents.length; i++) {
@@ -65,6 +63,15 @@ public class Utils {
             instructionComponents[i] = instructionComponents[i].substring(0, tail + 1);
         }
         return instructionComponents;
+    }
+
+    /**
+     * return if this str represents a register name.
+     * @param str
+     * @return true if the str represent a register name.
+     */
+    public static boolean isRegister(String str) {
+        return Character.isLetter(str.charAt(0));
     }
 
 }

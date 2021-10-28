@@ -1,3 +1,8 @@
+package entity.rs;
+
+import entity.instruction.Instruction;
+import entity.instruction.Operation;
+
 public class ReservationStation {
     /**
      * name
@@ -5,7 +10,7 @@ public class ReservationStation {
     private String name;
 
     /**
-     * instruction that occupying this reservation station
+     * entity.instruction that occupying this reservation station
      */
     private Instruction instruction;
 
@@ -139,9 +144,9 @@ public class ReservationStation {
 
     @Override
     public String toString() {
-        return "\nReservationStation{" +
+        return "\nentity.rs.ReservationStation{" +
                 "name='" + name + '\'' +
-                ", instruction=" + instruction +
+                ", entity.instruction=" + instruction +
                 ", busy=" + busy +
                 ", operation=" + operation +
                 ", vj=" + vj +

@@ -1,15 +1,39 @@
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
+
+
+import entity.CDB;
+import entity.Register;
+import entity.instruction.Add;
+import entity.instruction.Div;
+import entity.instruction.Instruction;
+import entity.instruction.InstructionWithTwoFields;
+import entity.instruction.InstructionWithThreeFields;
+import entity.instruction.Load;
+import entity.instruction.Mul;
+import entity.instruction.Operation;
+import entity.instruction.Phase;
+import entity.instruction.Store;
+import entity.instruction.Sub;
+import entity.rs.AdderRSs;
+import entity.rs.LoadBuffers;
+import entity.rs.MultDivRSs;
+import entity.rs.StoreBuffers;
+import static utils.Utils.*;
 
 public class Tomasulo {
     Queue<Instruction> instructionQueue = new ArrayDeque<>();
 
     Register[] registers = new Register[50];
+
+    CDB cdb = new CDB(registers);
 
     AdderRSs adderRSs = new AdderRSs();
 
@@ -19,99 +43,114 @@ public class Tomasulo {
 
     StoreBuffers storeBuffers = new StoreBuffers();
 
+    Integer globalClockCycle = 0;
+
     /**
      * map of immediate value and simulated address.
      * e.g. (x1 3.0) represents the value of address 'x1' is 3.0
      */
     Map<String, Double> addressImmediateMap = new HashMap<>();
 
-    private int addCount = 0;
-    private int mulCount = 0;
-    private int loadCount = 0;
-    private int storeCount = 0;
+    public void schedule() throws Exception {
+        while (true) {
+            globalClockCycle++;
+            cdb.send();
+            issue();
+            scheduleEachReservationStation();
+        }
+    }
 
-    public void schedule() {
-        while (!instructionQueue.isEmpty()) {
-            Instruction cur = instructionQueue.poll();
-            ReservationStation station = getOrCreateReservationStationByInstruction(cur);
-            switch (cur.getOp()) {
-                case STORE -> {
-                    if(station.get)
+    /**
+     * if the corresponding reservationStationSet of the head instruction of instructionQueue, then issue the instruction.
+     */
+    private void issue() throws Exception {
+        while(!instructionQueue.isEmpty() && checkReservationStationSetAvailability(instructionQueue.peek())) {
+            Instruction instruction = instructionQueue.poll();
+            switch (Objects.requireNonNull(instructionQueue.peek()).getOp()) {
+                case LOAD -> loadBuffers.issue((Load) instruction);
+                case STORE -> storeBuffers.issue((Store) instruction);
+                case ADD -> adderRSs.issue((Add) instruction);
+                case SUB -> adderRSs.issue((Sub) instruction);
+                case MUL -> multDivRSs.issue((Mul) instruction);
+                case DIV -> multDivRSs.issue((Div) instruction);
+            }
+        }
+    }
+
+    private boolean checkReservationStationSetAvailability(Instruction instruction) {
+        return switch (instruction.getOp()) {
+            case LOAD -> loadBuffers.available();
+            case STORE -> storeBuffers.available();
+            case ADD, SUB -> adderRSs.available();
+            case MUL, DIV -> multDivRSs.available();
+        };
+    }
+
+    private void scheduleEachReservationStation() {
+        loadBuffers.schedule();
+        storeBuffers.schedule();
+        adderRSs.schedule();
+        multDivRSs.schedule();
+    }
+
+    public void initialize() throws Exception {
+        // load the values for an address to the addressImmediateMap
+        loadAddressValues();
+        // program counter
+        int pc = 0;
+        List<String> instructionStringList = readInstructionsFromFile();
+        String instructionPackagePath = "entity.instruction.";
+        for(String instructionStr : instructionStringList) {
+            String[] instructionComponents = removeComma(instructionStr.split("\\s+"));
+            String operation = instructionComponents[0];
+            pc++;
+            switch (operation) {
+                case "Load" -> {
+                    Register rs = getOrCreateRegisterByName(instructionComponents[1]);
+                    Instruction load = new Load(pc, rs, instructionComponents[2]);
+                    instructionQueue.offer(load);
+                }
+                case "Store" -> {
+                    Register rs = getOrCreateRegisterByName(instructionComponents[1]);
+                    Instruction store = new Store(pc, rs, instructionComponents[2]);
+                    instructionQueue.offer(store);
+                }
+                case "Add", "Sub", "Mul", "Div" -> {
+                    Class<? extends InstructionWithThreeFields> clazz = (Class<? extends InstructionWithThreeFields>) Class.forName(instructionPackagePath + operation);
+                    Instruction instructionWithThreeFields = createInstructionWith3F(pc, instructionComponents, clazz);
+                    instructionQueue.offer(instructionWithThreeFields);
+                }
+                default -> {
                 }
             }
         }
     }
 
+    /**
+     * Create instruction with three computation fields. e.g. (instruction rd, rs, rt) or (instruction rd, rs, immediate)
+     * For Add, Sub, Mul, Div.
+     * @param pc program counter
+     * @param instructionComponents instruction string array e.g. [instruction, rd, rs, rt]
+     * @param clazz class of the target instruction
+     * @param <T> return type
+     * @return instruction of type T
+     */
+    public <T extends InstructionWithThreeFields> T createInstructionWith3F(Integer pc, String[] instructionComponents, Class<T> clazz)
+            throws Exception {
+        String str1 = instructionComponents[1];
+        String str2 = instructionComponents[2];
+        String str3 = instructionComponents[3];
+        Register rd = getOrCreateRegisterByName(str1);
 
+        // InstructionWithThreeRegisters(Integer pc, Register rd, Register rs, Register rt, Double immediate)
+        Constructor<T> constructor = clazz.getDeclaredConstructor(Integer.class, Register.class, Register.class, Register.class, Double.class);
 
-    public void initialize() {
-        // load the values for an address to the addressImmediateMap
-        loadAddressValues();
-        // program counter
-        int pc = 0;
-        List<String> instructionStringList = Utils.readInstructionsFromFile();
-        for(String instructionStr : instructionStringList) {
-            String[] instructionComponents = Utils.removeComma(instructionStr.split("\\s+"));
-            String operation = instructionComponents[0];
-            pc++;
-            switch (operation) {
-                case "Load" -> {
-                    Register loadRs = getOrCreateRegisterByName(instructionComponents[1]);
-                    Instruction load = new Instruction(pc, Operation.LOAD, loadRs, Operation.LOAD.getClockCycle(),
-                            Phase.NOT_ISSUED, instructionComponents[2]);
-                    instructionQueue.offer(load);
-                    getOrCreateReservationStationByInstruction(load);
-                }
-                case "Store" -> {
-                    Register storeRs = getOrCreateRegisterByName(instructionComponents[1]);
-                    Instruction store = new Instruction(pc, Operation.STORE, storeRs, Operation.STORE.getClockCycle(),
-                            Phase.NOT_ISSUED, instructionComponents[2]);
-                    instructionQueue.offer(store);
-                    getOrCreateReservationStationByInstruction(store);
-                }
-                case "Add" -> {
-                    Register addRd = getOrCreateRegisterByName(instructionComponents[1]);
-                    Register addRs = getOrCreateRegisterByName(instructionComponents[2]);
-                    Register addRt = getOrCreateRegisterByName(instructionComponents[3]);
-                    Instruction add =
-                            new Instruction(pc, Operation.ADD, addRd, addRs, addRt, Operation.ADD.getClockCycle(),
-                                    Phase.NOT_ISSUED);
-                    instructionQueue.offer(add);
-                    getOrCreateReservationStationByInstruction(add);
-                }
-                case "Sub" -> {
-                    Register subRd = getOrCreateRegisterByName(instructionComponents[1]);
-                    Register subRs = getOrCreateRegisterByName(instructionComponents[2]);
-                    Register subRt = getOrCreateRegisterByName(instructionComponents[3]);
-                    Instruction sub =
-                            new Instruction(pc, Operation.SUB, subRd, subRs, subRt, Operation.SUB.getClockCycle(),
-                                    Phase.NOT_ISSUED);
-                    instructionQueue.offer(sub);
-                    getOrCreateReservationStationByInstruction(sub);
-                }
-                case "Mul" -> {
-                    Register mulRd = getOrCreateRegisterByName(instructionComponents[1]);
-                    Register mulRs = getOrCreateRegisterByName(instructionComponents[2]);
-                    Register mulRt = getOrCreateRegisterByName(instructionComponents[3]);
-                    Instruction mul =
-                            new Instruction(pc, Operation.MUL, mulRd, mulRs, mulRt, Operation.MUL.getClockCycle(),
-                                    Phase.NOT_ISSUED);
-                    instructionQueue.offer(mul);
-                    getOrCreateReservationStationByInstruction(mul);
-                }
-                case "Div" -> {
-                    Register divRd = getOrCreateRegisterByName(instructionComponents[1]);
-                    Register divRs = getOrCreateRegisterByName(instructionComponents[2]);
-                    Register divRt = getOrCreateRegisterByName(instructionComponents[3]);
-                    Instruction div =
-                            new Instruction(pc, Operation.DIV, divRd, divRs, divRt, Operation.DIV.getClockCycle(),
-                                    Phase.NOT_ISSUED);
-                    instructionQueue.offer(div);
-                    getOrCreateReservationStationByInstruction(div);
-                }
-                default -> {
-                }
-            }
+        if (isRegister(str2) && isRegister(str3)) { // instruction rd, rs, rt
+            return constructor.newInstance(pc, rd, getOrCreateRegisterByName(str2), getOrCreateRegisterByName(str3), null);
+        } else if (isRegister(str2) && !isRegister(str3)) { // instruction rd, rs, immediate
+            return constructor.newInstance(pc, rd, getOrCreateRegisterByName(str2), null, Double.valueOf(str3));
+        } else {
+            throw new Exception("Wrong instruction style.");
         }
     }
 
@@ -121,30 +160,11 @@ public class Tomasulo {
      * @return the register
      */
     private Register getOrCreateRegisterByName(String registerName) {
-        int idx = Utils.getRegisterIndexByName(registerName);
-        if(CDB[idx] == null) {
-            CDB[idx] = new Register(idx, registerName);
+        int idx = getRegisterIndexByName(registerName);
+        if(registers[idx] == null) {
+            registers[idx] = new Register(idx, registerName);
         }
-        return CDB[idx];
-    }
-
-    /**
-     * get or create a reservation station by an instruction
-     * @param instruction
-     * @return reservation station
-     */
-    private ReservationStation getOrCreateReservationStationByInstruction(Instruction instruction) {
-        if(reservationStationsArray[instruction.getPc() - 1] == null) {
-            String name = switch (instruction.getOp()) {
-                case LOAD -> "Load" + (++loadCount);
-                case STORE -> "Store" + (++storeCount);
-                case ADD, SUB -> "Add" + (++addCount);
-                case MUL, DIV -> "Mul" + (++mulCount);
-            };
-            ReservationStation reservationStation = new ReservationStation(name, instruction, false, instruction.getOp(), null, null, null, null, instruction.getAddress());
-            reservationStationsArray[instruction.getPc() - 1] = reservationStation;
-        }
-        return reservationStationsArray[instruction.getPc() - 1];
+        return registers[idx];
     }
 
     /**

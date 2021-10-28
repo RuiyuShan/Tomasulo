@@ -1,7 +1,7 @@
-/**
- * @author shanruiyu <shanruiyu@kuaishou.com>
- * Created on 2021-10-27
- */
+package entity;
+
+import utils.Utils;
+
 public class CDB {
     private boolean available;
 
@@ -30,6 +30,14 @@ public class CDB {
     }
 
     public boolean send() {
-
+        boolean success = !available;
+        if(!available && destinationRegister != null && value != null) {
+            int idx = Utils.getRegisterIndexByName(destinationRegister);
+            registers[idx].setValue(value);
+            available = true;
+            destinationRegister = null;
+            value = null;
+        }
+        return success;
     }
 }
