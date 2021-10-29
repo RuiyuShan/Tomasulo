@@ -2,7 +2,7 @@ package entity.instruction;
 
 import entity.Register;
 
-public abstract class InstructionWithThreeFields extends Instruction{
+public abstract class InstructionForFP extends Instruction{
     /**
      * destination register
      */
@@ -41,7 +41,7 @@ public abstract class InstructionWithThreeFields extends Instruction{
 
 
 
-    public InstructionWithThreeFields(Integer pc, Operation op, Register rd, Register rs,
+    public InstructionForFP(Integer pc, Operation op, Register rd, Register rs,
             Register rt, Double immediate) {
         super(pc, op, op.getClockCycle());
         this.rd = rd;

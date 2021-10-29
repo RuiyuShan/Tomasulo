@@ -1,7 +1,9 @@
+package main;
+
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.ArrayDeque;
-import java.util.Dictionary;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +16,9 @@ import entity.Register;
 import entity.instruction.Add;
 import entity.instruction.Div;
 import entity.instruction.Instruction;
-import entity.instruction.InstructionWithTwoFields;
-import entity.instruction.InstructionWithThreeFields;
+import entity.instruction.InstructionForFP;
 import entity.instruction.Load;
 import entity.instruction.Mul;
-import entity.instruction.Operation;
-import entity.instruction.Phase;
 import entity.instruction.Store;
 import entity.instruction.Sub;
 import entity.rs.AdderRSs;
@@ -29,27 +28,56 @@ import entity.rs.StoreBuffers;
 import static utils.Utils.*;
 
 public class Tomasulo {
-    Queue<Instruction> instructionQueue = new ArrayDeque<>();
-
-    Register[] registers = new Register[50];
-
-    CDB cdb = new CDB(registers);
-
-    AdderRSs adderRSs = new AdderRSs();
-
-    MultDivRSs multDivRSs = new MultDivRSs();
-
-    LoadBuffers loadBuffers = new LoadBuffers();
-
-    StoreBuffers storeBuffers = new StoreBuffers();
-
-    Integer globalClockCycle = 0;
-
     /**
      * map of immediate value and simulated address.
      * e.g. (x1 3.0) represents the value of address 'x1' is 3.0
      */
     Map<String, Double> addressImmediateMap = new HashMap<>();
+
+    /**
+     * the instruction queue
+     */
+    Queue<Instruction> instructionQueue = new ArrayDeque<>();
+
+    /**
+     * register set
+     */
+    static Register[] registers = new Register[50];
+
+    /**
+     * the CDB
+     */
+    static CDB cdb = new CDB(registers);
+
+    /**
+     * reservation stations for Add and Sub operation
+     */
+    AdderRSs adderRSs = new AdderRSs();
+
+    /**
+     * reservation stations for Mul and Div operation
+     */
+    MultDivRSs multDivRSs = new MultDivRSs();
+
+    /**
+     * the load buffer, for Load operation
+     */
+    LoadBuffers loadBuffers = new LoadBuffers(addressImmediateMap);
+
+    /**
+     * the store buffer, for Store operation
+     */
+    StoreBuffers storeBuffers = new StoreBuffers(addressImmediateMap);
+
+    /**
+     * the global clock cycle
+     */
+    static Integer globalClockCycle = 0;
+
+    /**
+     * comment corresponds to the global clock cycle.
+     */
+    static List<String> comments = new ArrayList<>();
 
     public void schedule() throws Exception {
         while (true) {
@@ -61,10 +89,10 @@ public class Tomasulo {
     }
 
     /**
-     * if the corresponding reservationStationSet of the head instruction of instructionQueue, then issue the instruction.
+     * if the corresponding reservationStationSet of the head instruction of instructionQueue is available, then issue the instruction.
      */
     private void issue() throws Exception {
-        while(!instructionQueue.isEmpty() && checkReservationStationSetAvailability(instructionQueue.peek())) {
+        if(!instructionQueue.isEmpty() && checkReservationStationSetAvailability(instructionQueue.peek())) {
             Instruction instruction = instructionQueue.poll();
             switch (Objects.requireNonNull(instructionQueue.peek()).getOp()) {
                 case LOAD -> loadBuffers.issue((Load) instruction);
@@ -86,7 +114,7 @@ public class Tomasulo {
         };
     }
 
-    private void scheduleEachReservationStation() {
+    private void scheduleEachReservationStation() throws Exception {
         loadBuffers.schedule();
         storeBuffers.schedule();
         adderRSs.schedule();
@@ -96,6 +124,14 @@ public class Tomasulo {
     public void initialize() throws Exception {
         // load the values for an address to the addressImmediateMap
         loadAddressValues();
+        loadInstructions();
+        comments.add(globalClockCycle.toString());
+    }
+
+    /**
+     * read instructions from .txt file, create instruction objects and load them into the instruction queue.
+     */
+    private void loadInstructions() throws Exception {
         // program counter
         int pc = 0;
         List<String> instructionStringList = readInstructionsFromFile();
@@ -116,8 +152,8 @@ public class Tomasulo {
                     instructionQueue.offer(store);
                 }
                 case "Add", "Sub", "Mul", "Div" -> {
-                    Class<? extends InstructionWithThreeFields> clazz = (Class<? extends InstructionWithThreeFields>) Class.forName(instructionPackagePath + operation);
-                    Instruction instructionWithThreeFields = createInstructionWith3F(pc, instructionComponents, clazz);
+                    Class<? extends InstructionForFP> clazz = (Class<? extends InstructionForFP>) Class.forName(instructionPackagePath + operation);
+                    Instruction instructionWithThreeFields = createFPInstruction(pc, instructionComponents, clazz);
                     instructionQueue.offer(instructionWithThreeFields);
                 }
                 default -> {
@@ -135,7 +171,7 @@ public class Tomasulo {
      * @param <T> return type
      * @return instruction of type T
      */
-    public <T extends InstructionWithThreeFields> T createInstructionWith3F(Integer pc, String[] instructionComponents, Class<T> clazz)
+    public <T extends InstructionForFP> T createFPInstruction(Integer pc, String[] instructionComponents, Class<T> clazz)
             throws Exception {
         String str1 = instructionComponents[1];
         String str2 = instructionComponents[2];
@@ -188,4 +224,21 @@ public class Tomasulo {
         }
     }
 
+    public static Integer getGlobalClockCycle() {
+        return globalClockCycle;
+    }
+
+    private void incrementGlobalClockCycle() {
+        globalClockCycle++;
+        comments.add(globalClockCycle.toString());
+    }
+
+    public static void addComment(String comment) {
+        String currentComment = comments.get(globalClockCycle);
+        comments.set(globalClockCycle, currentComment + " " + comment);
+    }
+
+    public static CDB getCdb() {
+        return cdb;
+    }
 }

@@ -2,7 +2,7 @@ package entity.instruction;
 
 import entity.Register;
 
-public abstract class InstructionWithTwoFields extends Instruction {
+public abstract class InstructionForLoadStore extends Instruction {
     /**
      * destination register for Load or source register for Store
      */
@@ -29,7 +29,7 @@ public abstract class InstructionWithTwoFields extends Instruction {
         this.address = address;
     }
 
-    public InstructionWithTwoFields(Integer pc, Operation op, Register rs, String address) {
+    public InstructionForLoadStore(Integer pc, Operation op, Register rs, String address) {
         super(pc, op, op.getClockCycle());
         this.rs = rs;
         this.address = address;

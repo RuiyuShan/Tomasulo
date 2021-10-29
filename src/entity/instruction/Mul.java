@@ -2,7 +2,7 @@ package entity.instruction;
 
 import entity.Register;
 
-public class Mul extends InstructionWithThreeFields {
+public class Mul extends InstructionForFP {
 
     public Mul(Integer pc, Register rd, Register rs, Register rt,
             Double immediate) {

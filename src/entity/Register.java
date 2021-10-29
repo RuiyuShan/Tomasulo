@@ -1,5 +1,7 @@
 package entity;
 
+import entity.rs.ReservationStation;
+
 public class Register {
     /**
      * id of register
@@ -15,6 +17,11 @@ public class Register {
      * value of register
      */
     Double value;
+
+    /**
+     * The reference of the reservation station that contains the operation whose result should be stored into this register.
+     */
+    ReservationStation qi;
 
     public Integer getId() {
         return id;
@@ -38,6 +45,14 @@ public class Register {
 
     public void setValue(Double value) {
         this.value = value;
+    }
+
+    public ReservationStation getQi() {
+        return qi;
+    }
+
+    public void setQi(ReservationStation qi) {
+        this.qi = qi;
     }
 
     public Register(Integer id, String name) {

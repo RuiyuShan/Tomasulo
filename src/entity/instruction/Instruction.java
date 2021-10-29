@@ -22,11 +22,6 @@ public abstract class Instruction {
     private final Integer maxClockCycle;
 
     /**
-     * current clock cycle.
-     */
-    private Integer currentClockCycle = 0;
-
-    /**
      * phase of entity.instruction
      */
     private Phase phase = Phase.NOT_ISSUED;
@@ -49,18 +44,6 @@ public abstract class Instruction {
 
     public void setPhase(Phase phase) {
         this.phase = phase;
-    }
-
-    public void incrementClockCycle() {
-        this.currentClockCycle++;
-    }
-
-    /**
-     * whether the instruction completed its execution.
-     * @return res
-     */
-    public boolean completed() {
-        return currentClockCycle == maxClockCycle;
     }
 
     public Instruction(Integer pc, Operation op, Integer maxClockCycle) {

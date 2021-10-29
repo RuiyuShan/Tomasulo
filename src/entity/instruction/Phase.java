@@ -2,32 +2,42 @@ package entity.instruction;
 
 public enum Phase {
     /**
-     * the entity.instruction is waiting in the entity.instruction queue and not issued
+     * the instruction is waiting in the entity.instruction queue and not issued
      */
-    NOT_ISSUED,
+    NOT_ISSUED("not issued"),
 
     /**
-     * the entity.instruction is issued
+     * the instruction is issued
      */
-    ISSUE,
+    ISSUE("issued"),
 
     /**
-     * the entity.instruction starts to execution
+     * the instruction starts to execution
      */
-    EXECUTION_START,
+    EXECUTION_START("execution start"),
 
     /**
-     * the entity.instruction is executing
+     * the instruction is executing
      */
-    EXECUTING,
+    EXECUTING("executing"),
 
     /**
-     * the entity.instruction completes the execution
+     * the instruction completes the execution
      */
-    EXECUTION_COMPLETE,
+    EXECUTION_COMPLETE("execution complete"),
 
     /**
-     * the entity.instruction wrote the result to entity.CDB
+     * the instruction wrote the result to entity.CDB
      */
-    WRITE_RESULT
+    WRITE_RESULT("write result");
+
+    private final String value;
+
+    Phase(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

@@ -1,5 +1,6 @@
 package entity;
 
+import entity.rs.ReservationStation;
 import utils.Utils;
 
 public class CDB {
@@ -40,4 +41,6 @@ public class CDB {
         }
         return success;
     }
+
+    public void broadcast(ReservationStation station){}
 }

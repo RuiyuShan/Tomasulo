@@ -2,6 +2,8 @@ package entity.rs;
 
 import entity.instruction.Instruction;
 import entity.instruction.Operation;
+import entity.instruction.Store;
+import main.Tomasulo;
 
 public class ReservationStation {
     /**
@@ -45,19 +47,24 @@ public class ReservationStation {
     private ReservationStation qk;
 
     /**
-     * Source whose value should be stored into the register.
-     */
-    private Double qi;
-
-    /**
      * Used to hold information for the memory address calculation for a load or store.
      */
     private String A;
 
+    /**
+     * current clock cycle.
+     */
+    private Integer currentClockCycle = 0;
+
+    /**
+     * operation result
+     */
+    private Double result;
+
     public ReservationStation(){
     }
 
-    public ReservationStation(String name, Instruction instruction, boolean busy, Operation operation, Double vj, Double vk, ReservationStation qj, ReservationStation qk, String a, Double qi) {
+    public ReservationStation(String name, Instruction instruction, boolean busy, Operation operation, Double vj, Double vk, ReservationStation qj, ReservationStation qk, String a) {
         this.name = name;
         this.instruction = instruction;
         this.busy = busy;
@@ -66,7 +73,6 @@ public class ReservationStation {
         this.vk = vk;
         this.qj = qj;
         this.qk = qk;
-        this.qi = qi;
         A = a;
     }
 
@@ -140,6 +146,53 @@ public class ReservationStation {
 
     public void setA(String a) {
         A = a;
+    }
+
+    public Double getResult() {
+        return result;
+    }
+
+    public void setResult(Double result) {
+        this.result = result;
+    }
+
+    public Integer getCurrentClockCycle() {
+        return currentClockCycle;
+    }
+
+    public void incrementClockCycle(){
+        currentClockCycle++;
+    }
+
+    public boolean isExecutionCompleted(){
+        return currentClockCycle == instruction.getMaxClockCycle();
+    }
+
+    public void stall(){
+        addComment("stall");
+    }
+
+    public void addComment(String comment) {
+        Tomasulo.addComment(getName() + ":" + comment);
+    }
+
+    public boolean readyToExecute() {
+        switch (instruction.getOp()) {
+            case LOAD -> {
+                return true;
+            }
+            case ADD, SUB, MUL, DIV -> {
+                return vj != null && vk != null;
+            }
+            case STORE -> {
+                Store store = (Store) instruction;
+                if (store.getRs().getValue() != null) {
+                    return true;
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + instruction.getOp());
+        }
+        return false;
     }
 
     @Override

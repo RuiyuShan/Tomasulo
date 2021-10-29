@@ -2,7 +2,7 @@ package entity.instruction;
 
 import entity.Register;
 
-public class Sub extends InstructionWithThreeFields {
+public class Sub extends InstructionForFP {
 
     public Sub(Integer pc, Register rd, Register rs, Register rt,
             Double immediate) {

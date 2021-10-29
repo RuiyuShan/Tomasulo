@@ -1,6 +1,8 @@
 package entity.rs;
 
 import entity.instruction.Instruction;
+import entity.instruction.InstructionForFP;
+import entity.instruction.InstructionForLoadStore;
 
 /**
  * @author shanruiyu <shanruiyu@kuaishou.com>
@@ -32,10 +34,16 @@ public abstract class ReservationStationSet {
             size++;
             for(ReservationStation station : reservationStations) {
                 if(!station.isBusy()) {
+                    station = new ReservationStation(); // clear reservation station status
                     station.setInstruction(instruction);
                     station.setName(type + (++nameCount));
                     station.setBusy(true);
                     station.setOperation(instruction.getOp());
+                    if (instruction instanceof InstructionForLoadStore) {
+                        ((InstructionForLoadStore) instruction).getRs().setQi(station);
+                    } else {
+                        ((InstructionForFP) instruction).getRd().setQi(station);
+                    }
                     success = true;
                     break;
                 }
