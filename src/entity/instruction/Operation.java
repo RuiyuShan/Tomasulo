@@ -1,13 +1,15 @@
+package entity.instruction;
+
 public enum Operation {
     /**
      * load
      */
-    LOAD(2),
+    LOAD(3),
 
     /**
      * store
      */
-    STORE(2),
+    STORE(3),
 
     /**
      * add
@@ -22,24 +24,20 @@ public enum Operation {
     /**
      * multiple
      */
-    MUL(3),
+    MUL(5),
 
     /**
      * divide
      */
-    DIV(3);
+    DIV(5);
 
     /**
      * the clock cycles needed to perform the type of operation.
      */
-    private Integer clockCycle;
+    private final Integer clockCycle;
 
     public Integer getClockCycle() {
         return clockCycle;
-    }
-
-    public void setClockCycle(Integer clockCycle) {
-        this.clockCycle = clockCycle;
     }
 
     Operation(Integer clockCycle) {

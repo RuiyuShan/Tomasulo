@@ -1,3 +1,7 @@
+package entity;
+
+import entity.rs.ReservationStation;
+
 public class Register {
     /**
      * id of register
@@ -13,6 +17,11 @@ public class Register {
      * value of register
      */
     Double value;
+
+    /**
+     * The reference of the reservation station that contains the operation whose result should be stored into this register.
+     */
+    ReservationStation qi;
 
     public Integer getId() {
         return id;
@@ -38,6 +47,14 @@ public class Register {
         this.value = value;
     }
 
+    public ReservationStation getQi() {
+        return qi;
+    }
+
+    public void setQi(ReservationStation qi) {
+        this.qi = qi;
+    }
+
     public Register(Integer id, String name) {
         this.id = id;
         this.name = name;
@@ -52,8 +69,8 @@ public class Register {
     @Override
     public String toString() {
         return "{" +
-                "name='" + name + '\'' +
-                ", value=" + value +
-                '}';
+                "" + name + '\'' +
+                ", " + value +
+                "}";
     }
 }
