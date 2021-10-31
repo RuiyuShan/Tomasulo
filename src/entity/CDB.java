@@ -1,46 +1,67 @@
 package entity;
 
-import entity.rs.ReservationStation;
-import utils.Utils;
+import entity.instruction.InstructionForFP;
+import entity.instruction.Load;
+import entity.rs.*;
+
+import java.util.Comparator;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 public class CDB {
-    private boolean available;
-
-    private String destinationRegister;
-
-    private Double value;
+    /**
+     * In each cycle the cdb receives results of execution completed reservation stations, and broadcast the result of
+     * instruction whose pc is smallest.
+     */
+    private Queue<ReservationStation> queue = new PriorityQueue<>(Comparator.comparingInt(r -> r.getInstruction().getPc()));
 
     Register[] registers;
 
-    public CDB(Register[] registers) {
+    LoadBuffers loadBuffers;
+
+    StoreBuffers storeBuffers;
+
+    AdderRSs adderRSs;
+
+    MultDivRSs multDivRSs;
+
+    public CDB(Register[] registers, LoadBuffers loadBuffers, StoreBuffers storeBuffers, AdderRSs adderRSs, MultDivRSs multDivRSs) {
         this.registers = registers;
+        this.loadBuffers = loadBuffers;
+        this.storeBuffers = storeBuffers;
+        this.adderRSs = adderRSs;
+        this.multDivRSs = multDivRSs;
     }
 
-    public boolean available() {
-        return available;
+    public void offer(ReservationStation station) {
+        queue.offer(station);
     }
 
-    public boolean receive(String register, Double value) {
-        boolean success = available;
-        if(available) {
-            this.destinationRegister = register;
-            this.value = value;
-            available = false;
+
+    public void broadcastAndWriteResult() throws Exception {
+        if (!queue.isEmpty()) {
+            ReservationStation station = queue.poll();
+            loadBuffers.receiveBroadCastResult(station);
+            storeBuffers.receiveBroadCastResult(station);
+            adderRSs.receiveBroadCastResult(station);
+            multDivRSs.receiveBroadCastResult(station);
+            // Mark the target reservation station write result success.
+            station.updateStatusOfResult();
+            // Removes all of the elements from this collection
+            queue.clear();
+            // Update register value.
+            Double result = station.getResult();
+            switch (station.getOperation()) {
+                case LOAD -> {
+                    Load load = (Load) station.getInstruction();
+                    load.getRs().setValue(result);
+                }
+                case ADD, SUB, MUL, DIV -> {
+                    InstructionForFP instructionForFP = (InstructionForFP) station.getInstruction();
+                    instructionForFP.getRd().setValue(result);
+                }
+                default -> {}
+            }
         }
-        return success;
     }
-
-    public boolean send() {
-        boolean success = !available;
-        if(!available && destinationRegister != null && value != null) {
-            int idx = Utils.getRegisterIndexByName(destinationRegister);
-            registers[idx].setValue(value);
-            available = true;
-            destinationRegister = null;
-            value = null;
-        }
-        return success;
-    }
-
-    public void broadcast(ReservationStation station){}
 }

@@ -1,12 +1,10 @@
 package entity.rs;
 
-import java.util.Map;
-
-import entity.Register;
-import entity.instruction.Instruction;
 import entity.instruction.Load;
 import entity.instruction.Phase;
 import main.Tomasulo;
+
+import java.util.Map;
 
 public class LoadBuffers extends ReservationStationSet implements InstructionScheduler<Load> {
 
@@ -20,10 +18,11 @@ public class LoadBuffers extends ReservationStationSet implements InstructionSch
 
     @Override
     public void issue(Load load) throws Exception {
-        if (offer(load)) {
+        if (initializeReservationStation(load)) {
             ReservationStation station = getReservationStationByInstruction(load);
+            load.getRs().setQi(station);
             station.setA(load.getAddress());
-            station.incrementClockCycle();
+            station.increaseClockCycle();
             load.setPhase(Phase.ISSUE);
             station.addComment(Phase.ISSUE.getValue());
         } else {
@@ -33,39 +32,42 @@ public class LoadBuffers extends ReservationStationSet implements InstructionSch
 
     @Override
     public void execute(ReservationStation loadBuffer) throws Exception {
-        Load load = (Load) loadBuffer.getInstruction();
-        if (load.getPhase() == Phase.ISSUE) {
-            load.setPhase(Phase.EXECUTING);
-            loadBuffer.addComment(Phase.EXECUTION_START.getValue());
+        if (loadBuffer.getInstruction().getGlobalClockCycleIssuedAt().equals(Tomasulo.getGlobalClockCycle())){
+            return;
         }
-        loadBuffer.incrementClockCycle();
-        if (loadBuffer.isExecutionCompleted()) {
-            loadBuffer.setResult(addressImmediateMap.get(loadBuffer.getA()));
-            load.setPhase(Phase.EXECUTION_COMPLETE);
-            loadBuffer.addComment(Phase.EXECUTION_COMPLETE.getValue());
+        if (loadBuffer.readyToExecute()) {
+            Load load = (Load) loadBuffer.getInstruction();
+            if (load.getPhase() == Phase.ISSUE) {
+                load.setPhase(Phase.EXECUTING);
+                loadBuffer.addComment(Phase.EXECUTION_START.getValue());
+            }
+            loadBuffer.increaseClockCycle();
+            if (loadBuffer.isExecutionCompleted()) {
+                loadBuffer.setResult(addressImmediateMap.get(loadBuffer.getA()));
+                load.setPhase(Phase.EXECUTION_COMPLETE);
+                loadBuffer.addComment(Phase.EXECUTION_COMPLETE.getValue());
+            }
         }
     }
 
     @Override
     public void writeResult(ReservationStation reservationStation) throws Exception {
-        Load load = (Load) reservationStation.getInstruction();
-        Register rs = load.getRs();
-        Tomasulo.getCdb().receive(rs.getName(), reservationStation.getResult());
-        Tomasulo.getCdb().send();
-        load.setPhase(Phase.WRITE_RESULT);
-        reservationStation.setBusy(false);
-        reservationStation.addComment(Phase.WRITE_RESULT.getValue());
+        Tomasulo.getCdb().offer(reservationStation);
     }
 
     @Override
     public void schedule() throws Exception {
-        for (ReservationStation station : reservationStations) {
-            Load load = (Load) station.getInstruction();
-            switch (load.getPhase()) {
-                case ISSUE -> execute(station);
-                case EXECUTING -> execute(station);
-                case EXECUTION_COMPLETE -> writeResult(station);
+        for (ReservationStation station : getReservationStations()) {
+            if (station.isBusy()) {
+                Load load = (Load) station.getInstruction();
+                switch (load.getPhase()) {
+                    case ISSUE -> execute(station);
+                    case EXECUTING -> execute(station);
+                    case EXECUTION_COMPLETE -> writeResult(station);
+                    default -> {}
+                }
             }
         }
     }
+
 }

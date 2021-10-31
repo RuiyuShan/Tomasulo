@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 import main.Tomasulo;
 
 public class Main {
@@ -12,6 +10,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         Tomasulo tomasulo = new Tomasulo();
-        printInitialize(tomasulo);
+        tomasulo.initialize();
+        tomasulo.schedule();
     }
 }

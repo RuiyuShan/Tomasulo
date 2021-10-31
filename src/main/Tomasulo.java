@@ -1,30 +1,20 @@
 package main;
 
-import java.io.*;
-import java.lang.reflect.Constructor;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
-
-
 import entity.CDB;
 import entity.Register;
-import entity.instruction.Add;
-import entity.instruction.Div;
-import entity.instruction.Instruction;
-import entity.instruction.InstructionForFP;
-import entity.instruction.Load;
-import entity.instruction.Mul;
-import entity.instruction.Store;
-import entity.instruction.Sub;
+import entity.instruction.*;
 import entity.rs.AdderRSs;
 import entity.rs.LoadBuffers;
 import entity.rs.MultDivRSs;
 import entity.rs.StoreBuffers;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.util.*;
+
 import static utils.Utils.*;
 
 public class Tomasulo {
@@ -32,59 +22,74 @@ public class Tomasulo {
      * map of immediate value and simulated address.
      * e.g. (x1 3.0) represents the value of address 'x1' is 3.0
      */
-    Map<String, Double> addressImmediateMap = new HashMap<>();
+    static Map<String, Double> addressImmediateMap;
 
     /**
      * the instruction queue
      */
-    Queue<Instruction> instructionQueue = new ArrayDeque<>();
+    static Queue<Instruction> instructionQueue;
 
     /**
      * register set
      */
-    static Register[] registers = new Register[50];
-
-    /**
-     * the CDB
-     */
-    static CDB cdb = new CDB(registers);
+    static Register[] registers;
 
     /**
      * reservation stations for Add and Sub operation
      */
-    AdderRSs adderRSs = new AdderRSs();
+    static AdderRSs adderRSs;
 
     /**
      * reservation stations for Mul and Div operation
      */
-    MultDivRSs multDivRSs = new MultDivRSs();
+    static MultDivRSs multDivRSs;
 
     /**
      * the load buffer, for Load operation
      */
-    LoadBuffers loadBuffers = new LoadBuffers(addressImmediateMap);
+    static LoadBuffers loadBuffers;
 
     /**
      * the store buffer, for Store operation
      */
-    StoreBuffers storeBuffers = new StoreBuffers(addressImmediateMap);
+    static StoreBuffers storeBuffers;
+
+    /**
+     * the CDB
+     */
+    static CDB cdb;
 
     /**
      * the global clock cycle
      */
-    static Integer globalClockCycle = 0;
+    static Integer globalClockCycle;
 
     /**
      * comment corresponds to the global clock cycle.
      */
-    static List<String> comments = new ArrayList<>();
+    static List<String> comments;
+
+    public Tomasulo() {
+        addressImmediateMap = new HashMap<>();
+        instructionQueue = new ArrayDeque<>();
+        registers = new Register[20];
+        adderRSs = new AdderRSs();
+        multDivRSs = new MultDivRSs();
+        loadBuffers = new LoadBuffers(addressImmediateMap);
+        storeBuffers = new StoreBuffers(addressImmediateMap);
+        cdb = new CDB(registers, loadBuffers, storeBuffers, adderRSs, multDivRSs);
+        globalClockCycle = 0;
+        comments = new ArrayList<>();
+    }
 
     public void schedule() throws Exception {
-        while (true) {
-            globalClockCycle++;
-            cdb.send();
+        while (!done()) {
+            increaseGlobalClockCycle();
             issue();
             scheduleEachReservationStation();
+            cdb.broadcastAndWriteResult();
+            System.out.println(comments.get(getGlobalClockCycle()) + "\n" + Arrays.toString(registers) + "\n");
+            Thread.sleep(300);
         }
     }
 
@@ -94,7 +99,7 @@ public class Tomasulo {
     private void issue() throws Exception {
         if(!instructionQueue.isEmpty() && checkReservationStationSetAvailability(instructionQueue.peek())) {
             Instruction instruction = instructionQueue.poll();
-            switch (Objects.requireNonNull(instructionQueue.peek()).getOp()) {
+            switch (Objects.requireNonNull(Objects.requireNonNull(instruction).getOp())) {
                 case LOAD -> loadBuffers.issue((Load) instruction);
                 case STORE -> storeBuffers.issue((Store) instruction);
                 case ADD -> adderRSs.issue((Add) instruction);
@@ -171,7 +176,7 @@ public class Tomasulo {
      * @param <T> return type
      * @return instruction of type T
      */
-    public <T extends InstructionForFP> T createFPInstruction(Integer pc, String[] instructionComponents, Class<T> clazz)
+    private  <T extends InstructionForFP> T createFPInstruction(Integer pc, String[] instructionComponents, Class<T> clazz)
             throws Exception {
         String str1 = instructionComponents[1];
         String str2 = instructionComponents[2];
@@ -224,18 +229,28 @@ public class Tomasulo {
         }
     }
 
+    /**
+     * Check if the program has completed its work.
+     * @return true if instruction completed.
+     */
+    private boolean done() {
+        return instructionQueue.isEmpty()
+                && loadBuffers.isEmpty() && storeBuffers.isEmpty()
+                && adderRSs.isEmpty() && multDivRSs.isEmpty();
+    }
+
     public static Integer getGlobalClockCycle() {
         return globalClockCycle;
     }
 
-    private void incrementGlobalClockCycle() {
+    private void increaseGlobalClockCycle() {
         globalClockCycle++;
         comments.add(globalClockCycle.toString());
     }
 
     public static void addComment(String comment) {
         String currentComment = comments.get(globalClockCycle);
-        comments.set(globalClockCycle, currentComment + " " + comment);
+        comments.set(globalClockCycle, currentComment + "\t" + comment);
     }
 
     public static CDB getCdb() {

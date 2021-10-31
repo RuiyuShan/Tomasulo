@@ -68,9 +68,9 @@ public class Register {
 
     @Override
     public String toString() {
-        return "entity.Register {" +
-                "name='" + name + '\'' +
-                ", value=" + value +
+        return "{" +
+                "" + name + '\'' +
+                ", " + value +
                 "}";
     }
 }

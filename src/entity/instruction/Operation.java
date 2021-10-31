@@ -24,12 +24,12 @@ public enum Operation {
     /**
      * multiple
      */
-    MUL(10),
+    MUL(5),
 
     /**
      * divide
      */
-    DIV(40);
+    DIV(5);
 
     /**
      * the clock cycles needed to perform the type of operation.

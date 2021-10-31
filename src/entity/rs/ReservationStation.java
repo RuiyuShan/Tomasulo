@@ -2,6 +2,7 @@ package entity.rs;
 
 import entity.instruction.Instruction;
 import entity.instruction.Operation;
+import entity.instruction.Phase;
 import entity.instruction.Store;
 import main.Tomasulo;
 
@@ -60,6 +61,11 @@ public class ReservationStation {
      * operation result
      */
     private Double result;
+
+    /**
+     * If this rs successfully write result.
+     */
+    private boolean writeResultSuccess;
 
     public ReservationStation(){
     }
@@ -160,12 +166,12 @@ public class ReservationStation {
         return currentClockCycle;
     }
 
-    public void incrementClockCycle(){
+    public void increaseClockCycle(){
         currentClockCycle++;
     }
 
     public boolean isExecutionCompleted(){
-        return currentClockCycle == instruction.getMaxClockCycle();
+        return currentClockCycle.equals(instruction.getMaxClockCycle());
     }
 
     public void stall(){
@@ -195,18 +201,21 @@ public class ReservationStation {
         return false;
     }
 
-    @Override
-    public String toString() {
-        return "\nentity.rs.ReservationStation{" +
-                "name='" + name + '\'' +
-                ", entity.instruction=" + instruction +
-                ", busy=" + busy +
-                ", operation=" + operation +
-                ", vj=" + vj +
-                ", vk=" + vk +
-                ", qj=" + qj +
-                ", qk=" + qk +
-                ", A=" + A +
-                "}";
+    public void updateStatusOfResult() throws Exception {
+        if(!writeResultSuccess) {
+            getInstruction().setPhase(Phase.WRITE_RESULT);
+            setBusy(false);
+            addComment(Phase.WRITE_RESULT.getValue());
+            switch (getOperation()) {
+                case LOAD -> LoadBuffers.decreaseSize();
+                case STORE -> StoreBuffers.decreaseSize();
+                case ADD, SUB -> AdderRSs.decreaseSize();
+                case MUL, DIV -> MultDivRSs.decreaseSize();
+            }
+            writeResultSuccess = true;
+        } else {
+            throw new Exception("The result has been written");
+        }
     }
+
 }

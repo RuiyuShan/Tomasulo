@@ -1,7 +1,5 @@
 package entity.instruction;
 
-import entity.Register;
-
 /**
  * Class represents entity.instruction
  */
@@ -26,6 +24,11 @@ public abstract class Instruction {
      */
     private Phase phase = Phase.NOT_ISSUED;
 
+    /**
+     * the global clock cycle in which the instruction first issue.
+     */
+    private Integer globalClockCycleIssuedAt;
+
     public Integer getPc() {
         return pc;
     }
@@ -46,19 +49,18 @@ public abstract class Instruction {
         this.phase = phase;
     }
 
+    public Integer getGlobalClockCycleIssuedAt() {
+        return globalClockCycleIssuedAt;
+    }
+
+    public void setGlobalClockCycleIssuedAt(Integer globalClockCycleIssuedAt) {
+        this.globalClockCycleIssuedAt = globalClockCycleIssuedAt;
+    }
+
     public Instruction(Integer pc, Operation op, Integer maxClockCycle) {
         this.pc = pc;
         this.op = op;
         this.maxClockCycle = maxClockCycle;
     }
 
-    @Override
-    public String toString() {
-        return "{" +
-                "pc=" + pc +
-                ", op=" + op +
-                ", maxClockCycle=" + maxClockCycle +
-                ", phase=" + phase +
-                '}';
-    }
 }

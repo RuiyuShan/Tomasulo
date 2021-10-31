@@ -1,23 +1,18 @@
 package entity.rs;
 
 import entity.instruction.Instruction;
-import entity.instruction.InstructionForFP;
-import entity.instruction.InstructionForLoadStore;
+import main.Tomasulo;
 
-/**
- * @author shanruiyu <shanruiyu@kuaishou.com>
- * Created on 2021-10-27
- */
 public abstract class ReservationStationSet {
-    final String type;
+    private final String type;
 
-    final int capacity;
+    private final int capacity;
 
-    int nameCount;
+    private int nameCount;
 
-    int size;
+    private static int size;
 
-    ReservationStation[] reservationStations;
+    private ReservationStation[] reservationStations;
 
     public ReservationStationSet(int capacity, String type) {
         this.capacity = capacity;
@@ -28,22 +23,21 @@ public abstract class ReservationStationSet {
         }
     }
 
-    public boolean offer(Instruction instruction) {
+    public boolean initializeReservationStation(Instruction instruction) {
         boolean success = false;
         if(available()) {
             size++;
-            for(ReservationStation station : reservationStations) {
-                if(!station.isBusy()) {
-                    station = new ReservationStation(); // clear reservation station status
-                    station.setInstruction(instruction);
-                    station.setName(type + (++nameCount));
-                    station.setBusy(true);
-                    station.setOperation(instruction.getOp());
-                    if (instruction instanceof InstructionForLoadStore) {
-                        ((InstructionForLoadStore) instruction).getRs().setQi(station);
-                    } else {
-                        ((InstructionForFP) instruction).getRd().setQi(station);
-                    }
+            for (int i = 0; i < reservationStations.length; i++) {
+                if(!reservationStations[i].isBusy()) {
+                    // clear reservation station status
+                    reservationStations[i] = new ReservationStation();
+                    // link the instruction to the rs
+                    reservationStations[i].setInstruction(instruction);
+                    // set rs name
+                    reservationStations[i].setName(type + (++nameCount));
+                    reservationStations[i].setBusy(true);
+                    reservationStations[i].setOperation(instruction.getOp());
+                    instruction.setGlobalClockCycleIssuedAt(Tomasulo.getGlobalClockCycle());
                     success = true;
                     break;
                 }
@@ -66,4 +60,40 @@ public abstract class ReservationStationSet {
     public boolean available() {
         return size != capacity;
     }
+
+    public void receiveBroadCastResult(ReservationStation source){
+        for (ReservationStation station : reservationStations) {
+            if (station.getQj() == source) {
+                station.setVj(source.getResult());
+                station.setQj(null);
+            }
+            if (station.getQk() == source) {
+                station.setVk(source.getResult());
+                station.setQk(null);
+            }
+        }
+    }
+
+    public ReservationStation[] getReservationStations() {
+        return reservationStations;
+    }
+
+    public static void decreaseSize() throws Exception{
+        if (size > 0) {
+            size--;
+        } else {
+            throw new Exception("size cannot decrease because size == 0.");
+        }
+    }
+
+    public boolean isEmpty(){
+        boolean res = true;
+        for (ReservationStation station : reservationStations) {
+            if (station.isBusy()) {
+                return false;
+            }
+        }
+        return res;
+    }
+
 }

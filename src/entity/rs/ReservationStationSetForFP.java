@@ -1,6 +1,5 @@
 package entity.rs;
 
-import entity.instruction.Add;
 import entity.instruction.Instruction;
 import entity.instruction.InstructionForFP;
 import entity.instruction.Phase;
@@ -14,8 +13,8 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
 
     @Override
     public void issue(InstructionForFP instruction) throws Exception {
-        ReservationStation station = getReservationStationByInstruction(instruction);
-        if (offer(instruction)) {
+        if (initializeReservationStation(instruction)) {
+            ReservationStation station = getReservationStationByInstruction(instruction);
             // set Vj and Qj
             if (instruction.getRs().getValue() != null) {
                 station.setVj(instruction.getRs().getValue());
@@ -32,8 +31,8 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
             } else {
                 station.setVk(instruction.getImmediate());
             }
-            station.setBusy(true);
-            station.incrementClockCycle();
+            instruction.getRd().setQi(station);
+            station.increaseClockCycle();
             station.addComment(Phase.ISSUE.getValue());
             instruction.setPhase(Phase.ISSUE);
         } else {
@@ -43,13 +42,16 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
 
     @Override
     public void execute(ReservationStation reservationStation) throws Exception {
+        if (reservationStation.getInstruction().getGlobalClockCycleIssuedAt().equals(Tomasulo.getGlobalClockCycle())){
+            return;
+        }
         if (reservationStation.readyToExecute()) {
             InstructionForFP instruction = (InstructionForFP) reservationStation.getInstruction();
             if (instruction.getPhase() == Phase.ISSUE) {
                 instruction.setPhase(Phase.EXECUTING);
                 reservationStation.addComment(Phase.EXECUTION_START.getValue());
             }
-            reservationStation.incrementClockCycle();
+            reservationStation.increaseClockCycle();
             if (reservationStation.isExecutionCompleted()) {
                 Double result = switch (instruction.getOp()) {
                     case ADD -> reservationStation.getVj() + reservationStation.getVk();
@@ -69,18 +71,21 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
 
     @Override
     public void writeResult(ReservationStation reservationStation) throws Exception {
-
+        Tomasulo.getCdb().offer(reservationStation);
     }
 
     @Override
     public void schedule() throws Exception {
-        for (ReservationStation station : reservationStations) {
+        for (ReservationStation station : getReservationStations()) {
             if (station.isBusy()) {
-                Instruction instruction = station.getInstruction();
-                switch (instruction.getPhase()) {
-                    case ISSUE -> execute(station);
-                    case EXECUTING -> execute(station);
-                    case EXECUTION_COMPLETE -> writeResult(station);
+                if (station.isBusy()) {
+                    Instruction instruction = station.getInstruction();
+                    switch (instruction.getPhase()) {
+                        case ISSUE -> execute(station);
+                        case EXECUTING -> execute(station);
+                        case EXECUTION_COMPLETE -> writeResult(station);
+                        default -> {}
+                    }
                 }
             }
         }
