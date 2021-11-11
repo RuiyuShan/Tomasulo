@@ -47,7 +47,7 @@ public class CDB {
             multDivRSs.receiveBroadCastResult(station);
             // Mark the target reservation station write result success.
             station.updateStatusOfResult();
-            // Removes all of the elements from this collection
+            // Removes all the elements from this collection
             queue.clear();
             // Update register value.
             Double result = station.getResult();
