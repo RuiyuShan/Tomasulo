@@ -88,7 +88,8 @@ public class Tomasulo {
             issue();
             scheduleEachReservationStation();
             cdb.broadcastAndWriteResult();
-            System.out.println(comments.get(getGlobalClockCycle()) + "\n" + Arrays.toString(registers) + "\n");
+//            System.out.println(comments.get(getGlobalClockCycle()) + "\n" + Arrays.toString(registers) + "\n");
+            System.out.println(comments.get(getGlobalClockCycle()) + "\n");
             Thread.sleep(300);
         }
     }

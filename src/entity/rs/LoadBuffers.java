@@ -22,7 +22,6 @@ public class LoadBuffers extends ReservationStationSet implements InstructionSch
             ReservationStation station = getReservationStationByInstruction(load);
             load.getRs().setQi(station);
             station.setA(load.getAddress());
-            station.increaseClockCycle();
             load.setPhase(Phase.ISSUE);
             station.addComment(Phase.ISSUE.getValue());
         } else {

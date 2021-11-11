@@ -20,7 +20,6 @@ public class StoreBuffers extends ReservationStationSet implements InstructionSc
         if (initializeReservationStation(store)) {
             ReservationStation station = getReservationStationByInstruction(store);
             station.setA(store.getAddress());
-            station.increaseClockCycle();
             store.setPhase(Phase.ISSUE);
             station.addComment(Phase.ISSUE.getValue());
         }

@@ -32,7 +32,6 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
                 station.setVk(instruction.getImmediate());
             }
             instruction.getRd().setQi(station);
-            station.increaseClockCycle();
             station.addComment(Phase.ISSUE.getValue());
             instruction.setPhase(Phase.ISSUE);
         } else {
