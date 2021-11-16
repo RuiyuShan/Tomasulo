@@ -1,5 +1,8 @@
 package main;
 
+import de.vandermeer.asciitable.AT_Context;
+import de.vandermeer.asciitable.AsciiTable;
+import de.vandermeer.skb.interfaces.transformers.textformat.TextAlignment;
 import entity.CDB;
 import entity.Register;
 import entity.instruction.*;
@@ -7,13 +10,17 @@ import entity.rs.AdderRSs;
 import entity.rs.LoadBuffers;
 import entity.rs.MultDivRSs;
 import entity.rs.StoreBuffers;
+import utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static utils.Utils.*;
 
@@ -132,6 +139,7 @@ public class Tomasulo {
         // load the values for an address to the addressImmediateMap
         loadAddressValues();
         loadInstructions();
+        initializeRegisters();
         comments.add(globalClockCycle.toString());
     }
 
@@ -231,6 +239,25 @@ public class Tomasulo {
         }
     }
 
+    private void initializeRegisters() {
+        File file = new File("src/main/resources/defaultRegisterValue.txt");
+        if (file.isFile() && file.exists()) {
+            InputStreamReader read = null;
+            try {
+                read = new InputStreamReader(new FileInputStream(file));
+                BufferedReader bufferedReader = new BufferedReader(read);
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    String name = line.split("\\s+")[0];
+                    Double value = Double.valueOf(line.split("\\s+")[1]);
+                    registers[getRegisterIndexByName(name)].setValue(value);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * Check if the program has completed its work.
      * @return true if instruction completed.
@@ -264,5 +291,19 @@ public class Tomasulo {
         System.out.println(adderRSs.TableString());
         System.out.println(multDivRSs.TableString());
         System.out.println(storeBuffers.TableString());
+        System.out.println(registerTableString());
+    }
+
+    private static String registerTableString() {
+        AsciiTable at = new AsciiTable();
+        List<String> registerNames = Arrays.stream(registers).filter(Objects::nonNull).map(Register::getName).collect(Collectors.toList());
+        List<String> registerValues = Arrays.stream(registers).filter(Objects::nonNull).map(Register::getValue).map(Utils::keepFourDecimalPlaces).collect(Collectors.toList());
+        at.addRule();
+        at.addRow(registerNames);
+        at.addRule();
+        at.addRow(registerValues);
+        at.addRule();
+        at.setTextAlignment(TextAlignment.CENTER);
+        return "\tRegisters" + "\n" + at.render();
     }
 }

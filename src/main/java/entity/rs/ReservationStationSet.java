@@ -111,7 +111,7 @@ public abstract class ReservationStationSet implements PrintAsTable{
     public String TableString() {
         AsciiTable at = new AsciiTable();
         at.addRule();
-        at.addRow("Name", "Busy", "Instruction Phase", "Op", "Vj", "Vk", "Qj", "Qk", "A");
+        at.addRow("Name", "Busy", "Phase", "Op", "Vj", "Vk", "Qj", "Qk", "A");
         for (ReservationStation station : getReservationStations()) {
             if (station == null) {
                 at.addRule();
@@ -132,8 +132,7 @@ public abstract class ReservationStationSet implements PrintAsTable{
         }
         at.addRule();
         at.setTextAlignment(TextAlignment.CENTER);
-        at.set
-        return "\t" + getName() + "\n" +  at.render() + "\n";
+        return "\t" + getName() + "\n" +  at.render(120) + "\n";
     }
 
 }
