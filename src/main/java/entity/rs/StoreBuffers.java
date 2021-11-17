@@ -50,7 +50,7 @@ public class StoreBuffers extends ReservationStationSet implements InstructionSc
     @Override
     public void writeResult(ReservationStation reservationStation) throws Exception {
         addressImmediateMap.put(reservationStation.getA(), reservationStation.getResult());
-        reservationStation.updateStatusOfResult();
+        Tomasulo.getCdb().offer(reservationStation);
     }
 
     @Override

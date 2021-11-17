@@ -3,7 +3,7 @@ package entity.instruction;
 import lombok.Data;
 
 /**
- * Class represents entity.instruction
+ * Class represents entity.instruction.Instruction
  */
 @Data   // @Data provides Getter and Setter methods for this class.
 public abstract class Instruction {

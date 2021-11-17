@@ -46,7 +46,7 @@ public class CDB {
             adderRSs.receiveBroadCastResult(station);
             multDivRSs.receiveBroadCastResult(station);
             // Mark the target reservation station write result success.
-            station.updateStatusOfResult();
+            station.updateStatusOfResult(loadBuffers, storeBuffers, adderRSs, multDivRSs);
             // Removes all the elements from this collection
             queue.clear();
             // Update register value.

@@ -120,16 +120,16 @@ public class ReservationStation {
         return false;
     }
 
-    public void updateStatusOfResult() throws Exception {
+    public void updateStatusOfResult(LoadBuffers loadBuffers, StoreBuffers storeBuffers, AdderRSs adderRSs, MultDivRSs multDivRSs) throws Exception {
         if(!writeResultSuccess) {
             getInstruction().setPhase(Phase.WRITE_RESULT);
             setBusy(false);
             addComment(Phase.WRITE_RESULT.getValue());
             switch (getOperation()) {
-                case LOAD -> LoadBuffers.decreaseSize();
-                case STORE -> StoreBuffers.decreaseSize();
-                case ADD, SUB -> AdderRSs.decreaseSize();
-                case MUL, DIV -> MultDivRSs.decreaseSize();
+                case LOAD -> loadBuffers.decreaseSize();
+                case STORE -> storeBuffers.decreaseSize();
+                case ADD, SUB -> adderRSs.decreaseSize();
+                case MUL, DIV -> multDivRSs.decreaseSize();
             }
             writeResultSuccess = true;
         } else {

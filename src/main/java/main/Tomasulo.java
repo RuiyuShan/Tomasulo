@@ -7,6 +7,7 @@ import entity.CDB;
 import entity.Register;
 import entity.instruction.*;
 import entity.rs.AdderRSs;
+import entity.rs.ExecutionSummary;
 import entity.rs.LoadBuffers;
 import entity.rs.MultDivRSs;
 import entity.rs.StoreBuffers;
@@ -97,8 +98,9 @@ public class Tomasulo {
             cdb.broadcastAndWriteResult();
 //            System.out.println(comments.get(getGlobalClockCycle()) + "\n" + Arrays.toString(registers) + "\n");
             System.out.println(comments.get(getGlobalClockCycle()));
-            PrintTable();
-            Thread.sleep(500);
+//            PrintTable();
+            PrintSummary();
+//            Thread.sleep(500);
         }
     }
 
@@ -291,6 +293,11 @@ public class Tomasulo {
         System.out.println(adderRSs.TableString());
         System.out.println(multDivRSs.TableString());
         System.out.println(storeBuffers.TableString());
+        System.out.println(registerTableString());
+    }
+
+    public static void PrintSummary() {
+        System.out.println(ExecutionSummary.TableString());
         System.out.println(registerTableString());
     }
 

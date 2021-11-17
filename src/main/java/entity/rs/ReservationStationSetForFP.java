@@ -18,14 +18,14 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
         if (initializeReservationStation(instruction)) {
             ReservationStation station = getReservationStationByInstruction(instruction);
             // set Vj and Qj
-            if (instruction.getRs().getValue() != null) {
+            if (instruction.getRs().getQi().getResult() != null) {
                 station.setVj(instruction.getRs().getValue());
             } else {
                 station.setQj(instruction.getRs().getQi());
             }
             // set Vk and Qk
             if(instruction.getImmediate() == null) {
-                if (instruction.getRt().getValue() != null) {
+                if (instruction.getRt().getQi() == null || instruction.getRt().getQi().getResult() != null) {
                     station.setVk(instruction.getRt().getValue());
                 } else {
                     station.setQk(instruction.getRt().getQi());

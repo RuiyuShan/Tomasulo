@@ -9,7 +9,7 @@ public enum Operation {
     /**
      * store
      */
-    STORE(3),
+    STORE(2),
 
     /**
      * add
@@ -19,17 +19,17 @@ public enum Operation {
     /**
      * subtract
      */
-    SUB(2),
+    SUB(3),
 
     /**
      * multiple
      */
-    MUL(5),
+    MUL(10),
 
     /**
      * divide
      */
-    DIV(5);
+    DIV(40);
 
     /**
      * the clock cycles needed to complete execution of the type of instruction.

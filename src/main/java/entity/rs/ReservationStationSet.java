@@ -15,7 +15,7 @@ public abstract class ReservationStationSet implements PrintAsTable{
 
     private int nameCount;
 
-    private static int size;
+    private int size;
 
     private ReservationStation[] reservationStations;
 
@@ -37,6 +37,7 @@ public abstract class ReservationStationSet implements PrintAsTable{
                 if(!reservationStations[i].isBusy()) {
                     // clear reservation station status
                     reservationStations[i] = new ReservationStation();
+                    ExecutionSummary.reservationStations.add(reservationStations[i]);
                     // link the instruction to the rs
                     reservationStations[i].setInstruction(instruction);
                     // set rs name
@@ -84,7 +85,7 @@ public abstract class ReservationStationSet implements PrintAsTable{
         return reservationStations;
     }
 
-    public static void decreaseSize() throws Exception{
+    public void decreaseSize() throws Exception{
         if (size > 0) {
             size--;
         } else {
