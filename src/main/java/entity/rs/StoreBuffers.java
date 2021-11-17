@@ -13,7 +13,7 @@ public class StoreBuffers extends ReservationStationSet implements InstructionSc
     Map<String, Double> addressImmediateMap;
 
     public StoreBuffers(Map<String, Double> addressImmediateMap) {
-        super("StoreBuffers", 3, "Store");
+        super("StoreBuffers", 5, "Store");
         this.addressImmediateMap = addressImmediateMap;
     }
 

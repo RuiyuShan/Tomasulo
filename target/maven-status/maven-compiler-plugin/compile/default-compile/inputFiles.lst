@@ -17,6 +17,7 @@
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/instruction/Load.java
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/instruction/Sub.java
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/rs/InstructionScheduler.java
+/Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/rs/ExecutionSummary.java
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/Register.java
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/instruction/Operation.java
 /Users/shanruiyu/IdeaProjects/Tomasulo/src/main/java/entity/CDB.java

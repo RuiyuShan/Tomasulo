@@ -99,7 +99,7 @@ public class Tomasulo {
 //            System.out.println(comments.get(getGlobalClockCycle()) + "\n" + Arrays.toString(registers) + "\n");
             System.out.println(comments.get(getGlobalClockCycle()));
 //            PrintTable();
-            PrintSummary();
+            printSummary();
 //            Thread.sleep(500);
         }
     }
@@ -138,6 +138,7 @@ public class Tomasulo {
     }
 
     public void initialize() throws Exception {
+        printConfig();
         // load the values for an address to the addressImmediateMap
         loadAddressValues();
         loadInstructions();
@@ -296,7 +297,7 @@ public class Tomasulo {
         System.out.println(registerTableString());
     }
 
-    public static void PrintSummary() {
+    public static void printSummary() {
         System.out.println(ExecutionSummary.TableString());
         System.out.println(registerTableString());
     }
@@ -304,7 +305,16 @@ public class Tomasulo {
     private static String registerTableString() {
         AsciiTable at = new AsciiTable();
         List<String> registerNames = Arrays.stream(registers).filter(Objects::nonNull).map(Register::getName).collect(Collectors.toList());
-        List<String> registerValues = Arrays.stream(registers).filter(Objects::nonNull).map(Register::getValue).map(Utils::keepFourDecimalPlaces).collect(Collectors.toList());
+        List<String> registerValues = new ArrayList<>();
+        for (Register register : registers) {
+            if(register != null) {
+                if (register.getQi() != null && register.getQi().getInstruction().getPhase() != Phase.WRITE_RESULT) {
+                    registerValues.add(register.getQi().getName());
+                } else {
+                    registerValues.add(Utils.keepFourDecimalPlaces(register.getValue()));
+                }
+            }
+        }
         at.addRule();
         at.addRow(registerNames);
         at.addRule();
@@ -312,5 +322,16 @@ public class Tomasulo {
         at.addRule();
         at.setTextAlignment(TextAlignment.CENTER);
         return "\tRegisters" + "\n" + at.render();
+    }
+
+    public static void printConfig() {
+        String str = "Clock cycles needed to complete execution:\n" +
+                "Load - " + Operation.LOAD.getClockCycle() + "\t\t" +
+                "Store - " + Operation.STORE.getClockCycle() + "\t\t" +
+                "Add - " + Operation.ADD.getClockCycle() + "\t\t" +
+                "Sub - " + Operation.SUB.getClockCycle() + "\t\t" +
+                "Mul - " + Operation.MUL.getClockCycle() + "\t\t" +
+                "Div - " + Operation.DIV.getClockCycle() + "\n";
+        System.out.println(str);
     }
 }

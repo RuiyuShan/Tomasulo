@@ -13,7 +13,7 @@ public class LoadBuffers extends ReservationStationSet implements InstructionSch
     Map<String, Double> addressImmediateMap;
 
     public LoadBuffers(Map<String, Double> addressImmediateMap) {
-        super("LoadBuffers", 3, "Load");
+        super("LoadBuffers", 5, "Load");
         this.addressImmediateMap = addressImmediateMap;
     }
 

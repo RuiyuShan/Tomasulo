@@ -1,7 +1,3 @@
-Load f6, x1
-Load f2, x2
-Mul f0, f2, f4
-Sub f8, f6, f2
-Div f10, f0, f6
-Add f6, f8, f2
-Store f6, x1
+Add f8, f2, f0
+Sub f0, f8, f0
+Mul f4, f0, f8

@@ -35,7 +35,7 @@ public class Utils {
     public static List<String> readInstructionsFromFile() {
         List<String> res = new ArrayList<>();
         try {
-            File file = new File("src/main/resources/instructions.txt");
+            File file = new File("src/main/resources/instructions_long.txt");
             if (file.isFile() && file.exists()) {
                 InputStreamReader read = new InputStreamReader(new FileInputStream(file));
                 BufferedReader bufferedReader = new BufferedReader(read);

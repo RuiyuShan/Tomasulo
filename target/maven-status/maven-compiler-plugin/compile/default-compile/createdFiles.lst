@@ -2,6 +2,7 @@ entity/rs/ReservationStation.class
 entity/CDB.class
 entity/instruction/Store.class
 entity/rs/LoadBuffers.class
+entity/rs/ExecutionSummary.class
 entity/instruction/Load.class
 entity/rs/LoadBuffers$1.class
 entity/rs/ReservationStationSetForFP.class

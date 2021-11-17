@@ -3,6 +3,7 @@ package entity.rs;
 import de.vandermeer.asciitable.AsciiTable;
 import entity.instruction.Instruction;
 import entity.instruction.InstructionForFP;
+import entity.instruction.Operation;
 import entity.instruction.Phase;
 import main.Tomasulo;
 import utils.Utils;
@@ -18,7 +19,7 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
         if (initializeReservationStation(instruction)) {
             ReservationStation station = getReservationStationByInstruction(instruction);
             // set Vj and Qj
-            if (instruction.getRs().getQi().getResult() != null) {
+            if (instruction.getRs().getQi() == null || instruction.getRs().getQi().getResult() != null) {
                 station.setVj(instruction.getRs().getValue());
             } else {
                 station.setQj(instruction.getRs().getQi());
@@ -54,13 +55,18 @@ public abstract class ReservationStationSetForFP extends ReservationStationSet i
             }
             reservationStation.increaseClockCycle();
             if (reservationStation.isExecutionCompleted()) {
-                Double result = switch (instruction.getOp()) {
-                    case ADD -> reservationStation.getVj() + reservationStation.getVk();
-                    case SUB -> reservationStation.getVj() - reservationStation.getVk();
-                    case MUL -> reservationStation.getVj() * reservationStation.getVk();
-                    case DIV -> reservationStation.getVj() / reservationStation.getVk();
-                    default -> throw new Exception("Instruction type error.");
-                };
+                Double result = 0D;
+                if (instruction.getOp() == Operation.DIV && reservationStation.getVk() == 0D) {
+                    result = 0D;
+                } else {
+                    result = switch (instruction.getOp()) {
+                        case ADD -> reservationStation.getVj() + reservationStation.getVk();
+                        case SUB -> reservationStation.getVj() - reservationStation.getVk();
+                        case MUL -> reservationStation.getVj() * reservationStation.getVk();
+                        case DIV -> reservationStation.getVj() / reservationStation.getVk();
+                        default -> throw new Exception("Instruction type error.");
+                    };
+                }
                 reservationStation.setResult(result);
                 instruction.setPhase(Phase.EXECUTION_COMPLETE);
                 reservationStation.addComment(Phase.EXECUTION_COMPLETE.getValue());
