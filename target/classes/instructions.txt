@@ -1,3 +1,0 @@
-Add f8, f2, f0
-Sub f0, f8, f0
-Mul f4, f0, f8
